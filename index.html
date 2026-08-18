@@ -3,234 +3,977 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClipLong TTS — Turn long scripts into one continuous audio</title>
-<meta name="description" content="Split long scripts into Clipchamp-ready chunks and merge the resulting audio files locally in your browser. Free, no login, no server.">
-<link rel="stylesheet" href="style.css">
+
+<title>ClipLong TTS — Long Script Splitter</title>
+
+<meta name="description"
+content="Split long scripts into Clipchamp-ready text-to-speech parts. Free, private and browser-based.">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #090909;
+    color: #f5f5f5;
+}
+
+.container {
+    width: min(100% - 30px, 900px);
+    margin: auto;
+}
+
+header {
+    padding: 35px 0 20px;
+    border-bottom: 1px solid #222;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.logo span {
+    color: #ff3030;
+}
+
+.subtitle {
+    color: #999;
+    margin-top: 8px;
+}
+
+main {
+    padding: 30px 0 60px;
+}
+
+.card {
+    background: #111;
+    border: 1px solid #242424;
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 300px;
+    resize: vertical;
+    background: #080808;
+    border: 1px solid #292929;
+    border-radius: 12px;
+    padding: 16px;
+    color: white;
+    font-size: 16px;
+    line-height: 1.6;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: #ff3030;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.stat {
+    background: #171717;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+}
+
+.stat strong {
+    display: block;
+    font-size: 20px;
+}
+
+.stat span {
+    color: #888;
+    font-size: 12px;
+}
+
+.settings {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+input[type="number"] {
+    width: 120px;
+    background: #080808;
+    border: 1px solid #333;
+    color: white;
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+button,
+.clipchamp-btn {
+    border: 0;
+    border-radius: 9px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.primary {
+    background: #ff3030;
+    color: white;
+}
+
+.primary:hover {
+    background: #e52222;
+}
+
+.secondary {
+    background: #222;
+    color: white;
+}
+
+.secondary:hover {
+    background: #2d2d2d;
+}
+
+.clipchamp-btn {
+    background: #fff;
+    color: #000;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.parts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.parts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.part {
+    background: #0b0b0b;
+    border: 1px solid #292929;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.part-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: #151515;
+}
+
+.part-number {
+    font-weight: 700;
+}
+
+.part-count {
+    color: #888;
+    font-size: 12px;
+}
+
+.part-text {
+    padding: 14px;
+    white-space: pre-wrap;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.6;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.part-actions {
+    padding: 12px 14px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-top: 1px solid #222;
+}
+
+.status {
+    font-size: 12px;
+    color: #777;
+    margin-left: auto;
+    align-self: center;
+}
+
+.status.done {
+    color: #52d273;
+}
+
+.empty {
+    color: #777;
+    text-align: center;
+    padding: 30px 10px;
+}
+
+.progress {
+    margin-top: 18px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #222;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #ff3030;
+    transition: width .2s;
+}
+
+.notice {
+    background: #171717;
+    border-left: 3px solid #ff3030;
+    padding: 14px;
+    border-radius: 8px;
+    color: #bbb;
+    line-height: 1.5;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #666;
+    border-top: 1px solid #222;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    textarea {
+        min-height: 240px;
+    }
+
+    .part-top {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .status {
+        margin-left: 0;
+    }
+
+    .container {
+        width: min(100% - 20px, 900px);
+    }
+}
+</style>
 </head>
+
 <body>
 
-<a class="skip-link" href="#main">Skip to content</a>
-
-<header class="site-header">
-  <div class="wrap">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true">CL</span>
-      <div>
-        <h1>ClipLong TTS</h1>
-        <p class="subtitle">Turn long scripts into one continuous audio.</p>
-      </div>
+<header>
+    <div class="container">
+        <div class="logo">ClipLong <span>TTS</span></div>
+        <div class="subtitle">
+            Turn long scripts into Clipchamp-ready TTS parts.
+        </div>
     </div>
-    <nav class="quick-nav" aria-label="Section navigation">
-      <a href="#input-section">Script</a>
-      <a href="#chunks-section">Parts</a>
-      <a href="#workflow-section">Clipchamp</a>
-      <a href="#merge-section">Merge</a>
-      <a href="#privacy-section">Privacy</a>
-    </nav>
-  </div>
 </header>
 
-<main id="main">
+<main>
+<div class="container">
 
-  <!-- SCRIPT INPUT -->
-  <section id="input-section" class="card-section" aria-labelledby="input-heading">
-    <div class="wrap">
-      <h2 id="input-heading"><span class="step-num">1</span> Script Input</h2>
-      <p class="section-hint">Paste or upload your script. There is no length limit — this has been tested past 100,000 characters.</p>
+    <!-- SCRIPT -->
+    <section class="card">
+        <h2>1. Your Script</h2>
 
-      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop a .txt file here or click to browse">
-        <p><strong>Drag &amp; drop a .txt file</strong> here, or <button type="button" id="browseBtn" class="link-btn">browse your files</button></p>
-        <input type="file" id="fileInput" accept=".txt,text/plain" hidden>
-      </div>
+        <textarea
+            id="script"
+            placeholder="Paste your long YouTube script here..."
+        ></textarea>
 
-      <label for="scriptInput" class="field-label">Or paste your script directly</label>
-      <textarea id="scriptInput" placeholder="Paste your long script here…" spellcheck="false" aria-describedby="scriptStats"></textarea>
+        <div class="stats">
+            <div class="stat">
+                <strong id="characters">0</strong>
+                <span>Characters</span>
+            </div>
 
-      <div class="input-actions">
-        <button type="button" id="clearBtn" class="btn btn-ghost">Clear text</button>
-        <span id="clipboardMsg" class="inline-msg" role="status" aria-live="polite"></span>
-      </div>
+            <div class="stat">
+                <strong id="words">0</strong>
+                <span>Words</span>
+            </div>
 
-      <div id="scriptStats" class="stats-grid" aria-live="polite">
-        <div class="stat-card">
-          <span class="stat-value" id="statChars">0</span>
-          <span class="stat-label">Characters</span>
+            <div class="stat">
+                <strong id="estimatedParts">0</strong>
+                <span>Estimated Parts</span>
+            </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-value" id="statWords">0</span>
-          <span class="stat-label">Words</span>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="card">
+        <h2>2. TTS Settings</h2>
+
+        <div class="settings">
+            <label for="chunkSize">
+                Maximum characters:
+            </label>
+
+            <input
+                type="number"
+                id="chunkSize"
+                min="1000"
+                max="6000"
+                value="5500"
+                step="100"
+            >
+
+            <button class="primary" id="splitButton">
+                Split Script
+            </button>
         </div>
-        <div class="stat-card">
-          <span class="stat-value" id="statChunks">0</span>
-          <span class="stat-label">Estimated parts</span>
+
+        <p style="color:#777;font-size:13px;">
+            Maximum allowed: 6,000 characters per part.
+            5,500 is recommended for safety.
+        </p>
+    </section>
+
+    <!-- CLIPCHAMP -->
+    <section class="card">
+        <h2>3. Generate TTS</h2>
+
+        <div class="notice">
+            <strong>How it works:</strong><br><br>
+
+            Copy a part → open Clipchamp → paste it into
+            Text to Speech → generate the audio → return here →
+            continue with the next part.
         </div>
-        <div class="stat-card">
-          <span class="stat-value" id="statTime">0 min</span>
-          <span class="stat-label">Est. reading time</span>
+
+        <div class="actions">
+            <a
+                class="clipchamp-btn"
+                href="https://app.clipchamp.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Open Clipchamp ↗
+            </a>
+
+            <button class="secondary" id="copyNext">
+                Copy Next Part
+            </button>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- CHUNK SETTINGS -->
-  <section id="settings-section" class="card-section" aria-labelledby="settings-heading">
-    <div class="wrap">
-      <h2 id="settings-heading"><span class="step-num">2</span> Chunk Settings</h2>
-      <p class="section-hint">Clipchamp's text-to-speech box has a character limit. Choose the maximum size for each part — the splitter will never exceed it and will never cut a word in half.</p>
+        <div class="progress">
+            <div style="margin-bottom:8px;color:#999;font-size:13px;">
+                Progress:
+                <span id="progressText">0 / 0</span>
+            </div>
 
-      <div class="settings-row">
-        <label for="maxChunkSize">Maximum characters per part</label>
-        <div class="range-row">
-          <input type="range" id="maxChunkSizeRange" min="1000" max="6000" step="100" value="5500">
-          <input type="number" id="maxChunkSize" min="1000" max="6000" step="100" value="5500">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
         </div>
-        <p class="field-hint">Range: 1,000–6,000. Default 5,500. Hard ceiling 6,000.</p>
-      </div>
+    </section>
 
-      <div class="settings-actions">
-        <button type="button" id="splitBtn" class="btn btn-primary">Split into parts</button>
-        <button type="button" id="verifyBtn" class="btn btn-ghost">Verify chunks</button>
-      </div>
-      <p id="verifyResult" class="verify-result" role="status" aria-live="polite"></p>
-    </div>
-  </section>
+    <!-- PARTS -->
+    <section class="card">
+        <div class="parts-header">
+            <h2>4. Script Parts</h2>
 
-  <!-- GENERATED PARTS -->
-  <section id="chunks-section" class="card-section" aria-labelledby="chunks-heading">
-    <div class="wrap">
-      <h2 id="chunks-heading"><span class="step-num">3</span> Generated Parts</h2>
-
-      <div id="progressWrap" class="progress-wrap" hidden>
-        <div class="progress-text">
-          Progress: <span id="progressLabel">Part 0 / 0 completed</span>
+            <button class="secondary" id="copyAll">
+                Copy All Parts
+            </button>
         </div>
-        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-      </div>
 
-      <div class="chunks-toolbar" id="chunksToolbar" hidden>
-        <button type="button" id="nextPartBtn" class="btn btn-primary">Copy next pending part</button>
-        <button type="button" id="downloadZipBtn" class="btn btn-ghost">Download all as .zip</button>
-        <button type="button" id="downloadTxtBtn" class="btn btn-ghost">Download all as .txt files</button>
-      </div>
-
-      <p id="chunksEmpty" class="empty-state">No parts yet. Add a script above and click <strong>Split into parts</strong>.</p>
-
-      <div id="chunksList" class="chunks-list" aria-live="polite"></div>
-    </div>
-  </section>
-
-  <!-- CLIPCHAMP WORKFLOW -->
-  <section id="workflow-section" class="card-section" aria-labelledby="workflow-heading">
-    <div class="wrap">
-      <h2 id="workflow-heading"><span class="step-num">4</span> Clipchamp Workflow</h2>
-      <p class="section-hint">
-        A browser page cannot reach into Clipchamp's editor and drive it automatically — that's a normal browser security
-        boundary, not a bug in this tool. Here's what actually happens on each side.
-      </p>
-
-      <div class="workflow-split">
-        <div class="workflow-col">
-          <h3>Handled automatically by this page</h3>
-          <ul class="check-list">
-            <li>Splitting your script into parts</li>
-            <li>Copying a part to your clipboard</li>
-            <li>Tracking progress across parts</li>
-            <li>Organizing your downloaded audio files</li>
-            <li>Reordering and merging that audio</li>
-            <li>Exporting the final file — all on your device</li>
-          </ul>
+        <div id="parts" class="parts">
+            <div class="empty">
+                Paste your script and click "Split Script".
+            </div>
         </div>
-        <div class="workflow-col">
-          <h3>Not possible from a static page</h3>
-          <ul class="cross-list">
-            <li>Opening Clipchamp's editor for you</li>
-            <li>Clicking Clipchamp's Generate button</li>
-            <li>Downloading Clipchamp's output automatically</li>
-          </ul>
-        </div>
-      </div>
+    </section>
 
-      <ol class="workflow-steps">
-        <li>Copy Part 1 using the Copy button above.</li>
-        <li>Click <strong>Open Clipchamp</strong> to open it in a new tab.</li>
-        <li>Paste the text into Clipchamp's Text to Speech tool.</li>
-        <li>Generate the speech in Clipchamp.</li>
-        <li>Download / export the generated audio clip from Clipchamp.</li>
-        <li>Return to this tab.</li>
-        <li>Click <strong>Mark audio ready</strong> on Part 1.</li>
-        <li>Continue with Part 2, and so on.</li>
-      </ol>
-
-      <a href="https://app.clipchamp.com/" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="genericClipchampBtn">Open Clipchamp ↗</a>
-    </div>
-  </section>
-
-  <!-- AUDIO MERGER -->
-  <section id="merge-section" class="card-section" aria-labelledby="merge-heading">
-    <div class="wrap">
-      <h2 id="merge-heading"><span class="step-num">5</span> Audio Merger</h2>
-      <p class="section-hint">Once you've generated audio for each part in Clipchamp, add the downloaded files here in order. Everything below runs locally in your browser — nothing is uploaded.</p>
-
-      <div id="audioDropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop audio files here or click to browse">
-        <p><strong>Drag &amp; drop audio files</strong> here, or <button type="button" id="audioBrowseBtn" class="link-btn">browse your files</button></p>
-        <input type="file" id="audioFileInput" accept="audio/*" multiple hidden>
-      </div>
-
-      <p id="audioEmpty" class="empty-state">No audio files added yet.</p>
-      <ul id="audioList" class="audio-list" aria-live="polite"></ul>
-
-      <div class="audio-actions" id="audioActions" hidden>
-        <button type="button" id="clearAudioBtn" class="btn btn-ghost">Clear all</button>
-        <div class="format-choice">
-          <label>
-            <input type="radio" name="exportFormat" value="wav" checked>
-            WAV (reliable)
-          </label>
-          <label>
-            <input type="radio" name="exportFormat" value="mp3">
-            MP3 (experimental)
-          </label>
-        </div>
-        <button type="button" id="mergeBtn" class="btn btn-primary">Merge audio</button>
-      </div>
-
-      <div id="mergeProgress" class="merge-progress" hidden>
-        <div class="progress-bar"><div id="mergeProgressFill" class="progress-fill"></div></div>
-        <p id="mergeProgressLabel"></p>
-      </div>
-
-      <div id="mergeResult" class="merge-result" hidden>
-        <p id="mergeResultText"></p>
-        <a id="mergeDownloadLink" class="btn btn-primary" download>Download merged audio</a>
-      </div>
-
-      <p id="mergeError" class="error-msg" role="alert" hidden></p>
-    </div>
-  </section>
-
-  <!-- PRIVACY -->
-  <section id="privacy-section" class="card-section privacy-section" aria-labelledby="privacy-heading">
-    <div class="wrap">
-      <h2 id="privacy-heading"><span class="step-num">6</span> Privacy</h2>
-      <p class="privacy-statement">
-        Your text and audio files are processed locally in your browser. This website does not upload your script
-        or audio files to a server.
-      </p>
-      <p class="section-hint">No analytics, no cookies, no tracking scripts, and no login. This page loads two small open-source libraries from a public CDN (JSZip for .zip downloads, and lamejs only if you choose MP3 export) — your content is never sent to them or anywhere else.</p>
-    </div>
-  </section>
-
+</div>
 </main>
 
-<footer class="site-footer">
-  <div class="wrap">
-    <p>ClipLong TTS is a free, static tool. It is not affiliated with Microsoft or Clipchamp.</p>
-  </div>
+<footer>
+    ClipLong TTS · Free browser-based script splitter ·
+    Not affiliated with Microsoft or Clipchamp.
 </footer>
 
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
-<script src="script.js" defer></script>
+<script>
+
+const scriptInput = document.getElementById("script");
+const chunkSizeInput = document.getElementById("chunkSize");
+
+const characters = document.getElementById("characters");
+const words = document.getElementById("words");
+const estimatedParts = document.getElementById("estimatedParts");
+
+const splitButton = document.getElementById("splitButton");
+const copyNextButton = document.getElementById("copyNext");
+const copyAllButton = document.getElementById("copyAll");
+
+const partsContainer = document.getElementById("parts");
+
+const progressText = document.getElementById("progressText");
+const progressFill = document.getElementById("progressFill");
+
+let chunks = [];
+let completed = new Set();
+
+
+// -----------------------------
+// LIVE STATISTICS
+// -----------------------------
+
+scriptInput.addEventListener("input", updateStats);
+
+chunkSizeInput.addEventListener("input", updateStats);
+
+function updateStats() {
+
+    const text = scriptInput.value;
+
+    const charCount = text.length;
+
+    const wordCount = text.trim()
+        ? text.trim().split(/\s+/).length
+        : 0;
+
+    const size = Math.min(
+        6000,
+        Math.max(
+            1000,
+            Number(chunkSizeInput.value) || 5500
+        )
+    );
+
+    characters.textContent =
+        charCount.toLocaleString();
+
+    words.textContent =
+        wordCount.toLocaleString();
+
+    estimatedParts.textContent =
+        charCount
+            ? Math.ceil(charCount / size)
+            : 0;
+}
+
+
+// -----------------------------
+// INTELLIGENT SPLITTER
+// -----------------------------
+
+function splitText(text, maxLength) {
+
+    const result = [];
+
+    let remaining = text.trim();
+
+    while (remaining.length > maxLength) {
+
+        let cut = findBestCut(
+            remaining,
+            maxLength
+        );
+
+        if (cut <= 0) {
+            cut = maxLength;
+        }
+
+        let part = remaining
+            .slice(0, cut)
+            .trim();
+
+        if (!part) {
+            break;
+        }
+
+        result.push(part);
+
+        remaining = remaining
+            .slice(cut)
+            .trim();
+    }
+
+    if (remaining.length > 0) {
+        result.push(remaining);
+    }
+
+    return result;
+}
+
+
+function findBestCut(text, maxLength) {
+
+    const area = text.slice(0, maxLength);
+
+    // Prefer paragraph breaks
+    let cut = area.lastIndexOf("\n\n");
+
+    if (cut > maxLength * 0.55) {
+        return cut;
+    }
+
+    // Prefer sentence endings
+    const sentenceMatches = [
+        ". ",
+        "? ",
+        "! ",
+        "। ",
+        ".\n",
+        "?\n",
+        "!\n",
+        "。\n"
+    ];
+
+    let best = -1;
+
+    for (const separator of sentenceMatches) {
+
+        const position =
+            area.lastIndexOf(separator);
+
+        if (position > best) {
+            best = position;
+        }
+    }
+
+    if (best > maxLength * 0.55) {
+
+        const separatorLength =
+            area[best] === "\n" ? 1 : 2;
+
+        return best + separatorLength;
+    }
+
+    // Prefer punctuation
+    const punctuation = [
+        ", ",
+        "; ",
+        ": ",
+        " — ",
+        " - "
+    ];
+
+    best = -1;
+
+    for (const separator of punctuation) {
+
+        const position =
+            area.lastIndexOf(separator);
+
+        if (position > best) {
+            best = position;
+        }
+    }
+
+    if (best > maxLength * 0.55) {
+        return best + 1;
+    }
+
+    // Finally use whitespace
+    const space = area.lastIndexOf(" ");
+
+    if (space > 0) {
+        return space;
+    }
+
+    return maxLength;
+}
+
+
+// -----------------------------
+// SPLIT
+// -----------------------------
+
+splitButton.addEventListener("click", () => {
+
+    const text = scriptInput.value.trim();
+
+    if (!text) {
+        alert("Please paste your script first.");
+        return;
+    }
+
+    let size =
+        Number(chunkSizeInput.value) || 5500;
+
+    size = Math.min(
+        6000,
+        Math.max(1000, size)
+    );
+
+    chunkSizeInput.value = size;
+
+    chunks = splitText(text, size);
+
+    completed.clear();
+
+    renderParts();
+
+    updateProgress();
+
+    document
+        .getElementById("parts")
+        .scrollIntoView({
+            behavior: "smooth"
+        });
+});
+
+
+// -----------------------------
+// RENDER PARTS
+// -----------------------------
+
+function renderParts() {
+
+    partsContainer.innerHTML = "";
+
+    if (!chunks.length) {
+
+        partsContainer.innerHTML =
+            '<div class="empty">No parts generated.</div>';
+
+        return;
+    }
+
+    chunks.forEach((text, index) => {
+
+        const part = document.createElement("div");
+
+        part.className = "part";
+
+        part.id = `part-${index}`;
+
+        part.innerHTML = `
+
+            <div class="part-top">
+
+                <div class="part-number">
+                    Part ${index + 1}
+                </div>
+
+                <div class="part-count">
+                    ${text.length.toLocaleString()} characters
+                </div>
+
+            </div>
+
+            <div class="part-text"></div>
+
+            <div class="part-actions">
+
+                <button
+                    class="primary copy-button"
+                    data-index="${index}"
+                >
+                    Copy Part
+                </button>
+
+                <button
+                    class="secondary ready-button"
+                    data-index="${index}"
+                >
+                    Mark Audio Ready
+                </button>
+
+                <span
+                    class="status"
+                    id="status-${index}"
+                >
+                    Pending
+                </span>
+
+            </div>
+        `;
+
+        part
+            .querySelector(".part-text")
+            .textContent = text;
+
+        partsContainer.appendChild(part);
+    });
+
+
+    document
+        .querySelectorAll(".copy-button")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const index =
+                        Number(button.dataset.index);
+
+                    copyPart(index);
+                }
+            );
+        });
+
+
+    document
+        .querySelectorAll(".ready-button")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const index =
+                        Number(button.dataset.index);
+
+                    markReady(index);
+                }
+            );
+        });
+}
+
+
+// -----------------------------
+// COPY PART
+// -----------------------------
+
+async function copyPart(index) {
+
+    const text = chunks[index];
+
+    try {
+
+        await navigator.clipboard.writeText(text);
+
+        const status =
+            document.getElementById(
+                `status-${index}`
+            );
+
+        status.textContent =
+            "Copied to clipboard";
+
+        status.classList.add("done");
+
+        setTimeout(() => {
+
+            if (!completed.has(index)) {
+
+                status.textContent =
+                    "Pending";
+
+                status.classList.remove("done");
+            }
+
+        }, 1800);
+
+    } catch (error) {
+
+        // Fallback
+        const textarea =
+            document.createElement("textarea");
+
+        textarea.value = text;
+
+        document.body.appendChild(textarea);
+
+        textarea.select();
+
+        document.execCommand("copy");
+
+        textarea.remove();
+
+        alert(
+            `Part ${index + 1} copied.`
+        );
+    }
+}
+
+
+// -----------------------------
+// MARK READY
+// -----------------------------
+
+function markReady(index) {
+
+    completed.add(index);
+
+    const status =
+        document.getElementById(
+            `status-${index}`
+        );
+
+    status.textContent =
+        "Audio Ready ✓";
+
+    status.classList.add("done");
+
+    updateProgress();
+}
+
+
+// -----------------------------
+// PROGRESS
+// -----------------------------
+
+function updateProgress() {
+
+    const total = chunks.length;
+
+    const done = completed.size;
+
+    progressText.textContent =
+        `${done} / ${total}`;
+
+    const percentage =
+        total
+            ? (done / total) * 100
+            : 0;
+
+    progressFill.style.width =
+        `${percentage}%`;
+}
+
+
+// -----------------------------
+// COPY NEXT
+// -----------------------------
+
+copyNextButton.addEventListener(
+    "click",
+    async () => {
+
+        if (!chunks.length) {
+
+            alert(
+                "Split your script first."
+            );
+
+            return;
+        }
+
+        let next = -1;
+
+        for (
+            let i = 0;
+            i < chunks.length;
+            i++
+        ) {
+
+            if (!completed.has(i)) {
+
+                next = i;
+                break;
+            }
+        }
+
+        if (next === -1) {
+
+            alert(
+                "All parts are marked ready."
+            );
+
+            return;
+        }
+
+        await copyPart(next);
+
+        document
+            .getElementById(`part-${next}`)
+            .scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+    }
+);
+
+
+// -----------------------------
+// COPY ALL
+// -----------------------------
+
+copyAllButton.addEventListener(
+    "click",
+    async () => {
+
+        if (!chunks.length) {
+
+            alert(
+                "Split your script first."
+            );
+
+            return;
+        }
+
+        const allText =
+            chunks
+                .map(
+                    (text, i) =>
+                        `PART ${i + 1}\n\n${text}`
+                )
+                .join(
+                    "\n\n====================\n\n"
+                );
+
+        try {
+
+            await navigator.clipboard.writeText(
+                allText
+            );
+
+            alert(
+                "All parts copied."
+            );
+
+        } catch {
+
+            alert(
+                "Could not copy all parts."
+            );
+        }
+    }
+);
+
+
+// Initial stats
+updateStats();
+
+</script>
+
 </body>
-</html>
+  </html>            
