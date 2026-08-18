@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipLong TTS — Turn long scripts into one continuous audio</title>
+<meta name="description" content="Split long scripts into Clipchamp-ready chunks and merge the resulting audio files locally in your browser. Free, no login, no server.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">CL</span>
+      <div>
+        <h1>ClipLong TTS</h1>
+        <p class="subtitle">Turn long scripts into one continuous audio.</p>
+      </div>
+    </div>
+    <nav class="quick-nav" aria-label="Section navigation">
+      <a href="#input-section">Script</a>
+      <a href="#chunks-section">Parts</a>
+      <a href="#workflow-section">Clipchamp</a>
+      <a href="#merge-section">Merge</a>
+      <a href="#privacy-section">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- SCRIPT INPUT -->
+  <section id="input-section" class="card-section" aria-labelledby="input-heading">
+    <div class="wrap">
+      <h2 id="input-heading"><span class="step-num">1</span> Script Input</h2>
+      <p class="section-hint">Paste or upload your script. There is no length limit — this has been tested past 100,000 characters.</p>
+
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop a .txt file here or click to browse">
+        <p><strong>Drag &amp; drop a .txt file</strong> here, or <button type="button" id="browseBtn" class="link-btn">browse your files</button></p>
+        <input type="file" id="fileInput" accept=".txt,text/plain" hidden>
+      </div>
+
+      <label for="scriptInput" class="field-label">Or paste your script directly</label>
+      <textarea id="scriptInput" placeholder="Paste your long script here…" spellcheck="false" aria-describedby="scriptStats"></textarea>
+
+      <div class="input-actions">
+        <button type="button" id="clearBtn" class="btn btn-ghost">Clear text</button>
+        <span id="clipboardMsg" class="inline-msg" role="status" aria-live="polite"></span>
+      </div>
+
+      <div id="scriptStats" class="stats-grid" aria-live="polite">
+        <div class="stat-card">
+          <span class="stat-value" id="statChars">0</span>
+          <span class="stat-label">Characters</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="statWords">0</span>
+          <span class="stat-label">Words</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="statChunks">0</span>
+          <span class="stat-label">Estimated parts</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="statTime">0 min</span>
+          <span class="stat-label">Est. reading time</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHUNK SETTINGS -->
+  <section id="settings-section" class="card-section" aria-labelledby="settings-heading">
+    <div class="wrap">
+      <h2 id="settings-heading"><span class="step-num">2</span> Chunk Settings</h2>
+      <p class="section-hint">Clipchamp's text-to-speech box has a character limit. Choose the maximum size for each part — the splitter will never exceed it and will never cut a word in half.</p>
+
+      <div class="settings-row">
+        <label for="maxChunkSize">Maximum characters per part</label>
+        <div class="range-row">
+          <input type="range" id="maxChunkSizeRange" min="1000" max="6000" step="100" value="5500">
+          <input type="number" id="maxChunkSize" min="1000" max="6000" step="100" value="5500">
+        </div>
+        <p class="field-hint">Range: 1,000–6,000. Default 5,500. Hard ceiling 6,000.</p>
+      </div>
+
+      <div class="settings-actions">
+        <button type="button" id="splitBtn" class="btn btn-primary">Split into parts</button>
+        <button type="button" id="verifyBtn" class="btn btn-ghost">Verify chunks</button>
+      </div>
+      <p id="verifyResult" class="verify-result" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- GENERATED PARTS -->
+  <section id="chunks-section" class="card-section" aria-labelledby="chunks-heading">
+    <div class="wrap">
+      <h2 id="chunks-heading"><span class="step-num">3</span> Generated Parts</h2>
+
+      <div id="progressWrap" class="progress-wrap" hidden>
+        <div class="progress-text">
+          Progress: <span id="progressLabel">Part 0 / 0 completed</span>
+        </div>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      </div>
+
+      <div class="chunks-toolbar" id="chunksToolbar" hidden>
+        <button type="button" id="nextPartBtn" class="btn btn-primary">Copy next pending part</button>
+        <button type="button" id="downloadZipBtn" class="btn btn-ghost">Download all as .zip</button>
+        <button type="button" id="downloadTxtBtn" class="btn btn-ghost">Download all as .txt files</button>
+      </div>
+
+      <p id="chunksEmpty" class="empty-state">No parts yet. Add a script above and click <strong>Split into parts</strong>.</p>
+
+      <div id="chunksList" class="chunks-list" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- CLIPCHAMP WORKFLOW -->
+  <section id="workflow-section" class="card-section" aria-labelledby="workflow-heading">
+    <div class="wrap">
+      <h2 id="workflow-heading"><span class="step-num">4</span> Clipchamp Workflow</h2>
+      <p class="section-hint">
+        A browser page cannot reach into Clipchamp's editor and drive it automatically — that's a normal browser security
+        boundary, not a bug in this tool. Here's what actually happens on each side.
+      </p>
+
+      <div class="workflow-split">
+        <div class="workflow-col">
+          <h3>Handled automatically by this page</h3>
+          <ul class="check-list">
+            <li>Splitting your script into parts</li>
+            <li>Copying a part to your clipboard</li>
+            <li>Tracking progress across parts</li>
+            <li>Organizing your downloaded audio files</li>
+            <li>Reordering and merging that audio</li>
+            <li>Exporting the final file — all on your device</li>
+          </ul>
+        </div>
+        <div class="workflow-col">
+          <h3>Not possible from a static page</h3>
+          <ul class="cross-list">
+            <li>Opening Clipchamp's editor for you</li>
+            <li>Clicking Clipchamp's Generate button</li>
+            <li>Downloading Clipchamp's output automatically</li>
+          </ul>
+        </div>
+      </div>
+
+      <ol class="workflow-steps">
+        <li>Copy Part 1 using the Copy button above.</li>
+        <li>Click <strong>Open Clipchamp</strong> to open it in a new tab.</li>
+        <li>Paste the text into Clipchamp's Text to Speech tool.</li>
+        <li>Generate the speech in Clipchamp.</li>
+        <li>Download / export the generated audio clip from Clipchamp.</li>
+        <li>Return to this tab.</li>
+        <li>Click <strong>Mark audio ready</strong> on Part 1.</li>
+        <li>Continue with Part 2, and so on.</li>
+      </ol>
+
+      <a href="https://app.clipchamp.com/" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="genericClipchampBtn">Open Clipchamp ↗</a>
+    </div>
+  </section>
+
+  <!-- AUDIO MERGER -->
+  <section id="merge-section" class="card-section" aria-labelledby="merge-heading">
+    <div class="wrap">
+      <h2 id="merge-heading"><span class="step-num">5</span> Audio Merger</h2>
+      <p class="section-hint">Once you've generated audio for each part in Clipchamp, add the downloaded files here in order. Everything below runs locally in your browser — nothing is uploaded.</p>
+
+      <div id="audioDropzone" class="dropzone" tabindex="0" role="button" aria-label="Drop audio files here or click to browse">
+        <p><strong>Drag &amp; drop audio files</strong> here, or <button type="button" id="audioBrowseBtn" class="link-btn">browse your files</button></p>
+        <input type="file" id="audioFileInput" accept="audio/*" multiple hidden>
+      </div>
+
+      <p id="audioEmpty" class="empty-state">No audio files added yet.</p>
+      <ul id="audioList" class="audio-list" aria-live="polite"></ul>
+
+      <div class="audio-actions" id="audioActions" hidden>
+        <button type="button" id="clearAudioBtn" class="btn btn-ghost">Clear all</button>
+        <div class="format-choice">
+          <label>
+            <input type="radio" name="exportFormat" value="wav" checked>
+            WAV (reliable)
+          </label>
+          <label>
+            <input type="radio" name="exportFormat" value="mp3">
+            MP3 (experimental)
+          </label>
+        </div>
+        <button type="button" id="mergeBtn" class="btn btn-primary">Merge audio</button>
+      </div>
+
+      <div id="mergeProgress" class="merge-progress" hidden>
+        <div class="progress-bar"><div id="mergeProgressFill" class="progress-fill"></div></div>
+        <p id="mergeProgressLabel"></p>
+      </div>
+
+      <div id="mergeResult" class="merge-result" hidden>
+        <p id="mergeResultText"></p>
+        <a id="mergeDownloadLink" class="btn btn-primary" download>Download merged audio</a>
+      </div>
+
+      <p id="mergeError" class="error-msg" role="alert" hidden></p>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy-section" class="card-section privacy-section" aria-labelledby="privacy-heading">
+    <div class="wrap">
+      <h2 id="privacy-heading"><span class="step-num">6</span> Privacy</h2>
+      <p class="privacy-statement">
+        Your text and audio files are processed locally in your browser. This website does not upload your script
+        or audio files to a server.
+      </p>
+      <p class="section-hint">No analytics, no cookies, no tracking scripts, and no login. This page loads two small open-source libraries from a public CDN (JSZip for .zip downloads, and lamejs only if you choose MP3 export) — your content is never sent to them or anywhere else.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>ClipLong TTS is a free, static tool. It is not affiliated with Microsoft or Clipchamp.</p>
+  </div>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<script src="script.js" defer></script>
+</body>
+</html>
